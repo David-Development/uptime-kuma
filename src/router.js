@@ -20,6 +20,7 @@ import MaintenanceDetails from "./pages/MaintenanceDetails.vue";
 import ManageMaintenance from "./pages/ManageMaintenance.vue";
 import APIKeys from "./components/settings/APIKeys.vue";
 import SetupDatabase from "./pages/SetupDatabase.vue";
+import MapPage from "./pages/MapPage.vue";
 
 // Settings - Sub Pages
 import Appearance from "./components/settings/Appearance.vue";
@@ -183,6 +184,14 @@ const routes = [
     {
         path: "/status/:slug",
         component: StatusPage,
+    },
+    {
+        path: "/map",
+        component: MapPage,
+    },
+    {
+        path: "/map/:slug",
+        component: MapPage,
     },
     {
         path: "/:pathMatch(.*)*",
