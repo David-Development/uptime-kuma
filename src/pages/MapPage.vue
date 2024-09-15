@@ -330,7 +330,7 @@ export default {
 
                 flowChart = flowChart.replace(`${monitor.name})`, `${monitor.name}):::${statusClass}`)
             }
-            // console.log(flowChart);
+            console.log(flowChart);
 
             this.$root.flowChart = flowChart;
             // console.log(this.$root.monitorList[1]);
