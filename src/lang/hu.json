@@ -349,7 +349,6 @@
     "Discard": "Elvet",
     "Cancel": "Mégsem",
     "Powered by": "A megoldást szállítja az",
-    "shrinkDatabaseDescription": "VACUUM futtatása az SQLite-on. Ha az adatbázisod 1.10.0-nál újabb, akkor az AUTO_VACUUM engedélyezve van, nincs szükség a műveletre.",
     "serwersms": "SerwerSMS.pl",
     "serwersmsAPIUser": "API felhasználónév (webapi_ előtaggal együtt)",
     "serwersmsAPIPassword": "API jelszó",
@@ -850,5 +849,6 @@
     "max 15 digits": "max 15 karakter",
     "cellsyntDestination": "A címzett telefonszáma nemzetközi formátumban megadva. A kezdő 00-t követően az országkód, pl. 003612127654 egy magyarországi 0612127654 szám esetében (max 17 karakter összesen). HTTP lekérdezésenként max 25000, vesszővel elválaszott címzett.",
     "Telephone number": "Telefonszám",
-    "Allow Long SMS": "Hosszú SMS engedélyezve"
+    "Allow Long SMS": "Hosszú SMS engedélyezve",
+    "now": "most"
 }

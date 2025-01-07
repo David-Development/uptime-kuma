@@ -718,6 +718,8 @@ let needSetup = false;
 
                 monitor.conditions = JSON.stringify(monitor.conditions);
 
+                monitor.rabbitmqNodes = JSON.stringify(monitor.rabbitmqNodes);
+
                 bean.import(monitor);
                 bean.user_id = socket.userID;
 
@@ -727,7 +729,7 @@ let needSetup = false;
 
                 await updateMonitorNotification(bean.id, notificationIDList);
 
-                await server.sendMonitorList(socket);
+                await server.sendUpdateMonitorIntoList(socket, bean.id);
 
                 if (monitor.active !== false) {
                     await startMonitor(socket.userID, bean.id);
@@ -868,6 +870,9 @@ let needSetup = false;
                 bean.snmpOid = monitor.snmpOid;
                 bean.jsonPathOperator = monitor.jsonPathOperator;
                 bean.timeout = monitor.timeout;
+                bean.rabbitmqNodes = JSON.stringify(monitor.rabbitmqNodes);
+                bean.rabbitmqUsername = monitor.rabbitmqUsername;
+                bean.rabbitmqPassword = monitor.rabbitmqPassword;
                 bean.conditions = JSON.stringify(monitor.conditions);
 
                 bean.validate();
@@ -880,11 +885,11 @@ let needSetup = false;
 
                 await updateMonitorNotification(bean.id, monitor.notificationIDList);
 
-                if (await bean.isActive()) {
+                if (await Monitor.isActive(bean.id, bean.active)) {
                     await restartMonitor(socket.userID, bean.id);
                 }
 
-                await server.sendMonitorList(socket);
+                await server.sendUpdateMonitorIntoList(socket, bean.id);
 
                 callback({
                     ok: true,
@@ -924,14 +929,17 @@ let needSetup = false;
 
                 log.info("monitor", `Get Monitor: ${monitorID} User ID: ${socket.userID}`);
 
-                let bean = await R.findOne("monitor", " id = ? AND user_id = ? ", [
+                let monitor = await R.findOne("monitor", " id = ? AND user_id = ? ", [
                     monitorID,
                     socket.userID,
                 ]);
-
+                const monitorData = [{ id: monitor.id,
+                    active: monitor.active
+                }];
+                const preloadData = await Monitor.preparePreloadData(monitorData);
                 callback({
                     ok: true,
-                    monitor: await bean.toJSON(),
+                    monitor: monitor.toJSON(preloadData),
                 });
 
             } catch (e) {
@@ -982,7 +990,7 @@ let needSetup = false;
             try {
                 checkLogin(socket);
                 await startMonitor(socket.userID, monitorID);
-                await server.sendMonitorList(socket);
+                await server.sendUpdateMonitorIntoList(socket, monitorID);
 
                 callback({
                     ok: true,
@@ -1002,7 +1010,7 @@ let needSetup = false;
             try {
                 checkLogin(socket);
                 await pauseMonitor(socket.userID, monitorID);
-                await server.sendMonitorList(socket);
+                await server.sendUpdateMonitorIntoList(socket, monitorID);
 
                 callback({
                     ok: true,
@@ -1048,8 +1056,7 @@ let needSetup = false;
                     msg: "successDeleted",
                     msgi18n: true,
                 });
-
-                await server.sendMonitorList(socket);
+                await server.sendDeleteMonitorFromList(socket, monitorID);
 
             } catch (e) {
                 callback({
@@ -1597,17 +1604,19 @@ let needSetup = false;
 
     await server.start();
 
-    server.httpServer.listen(port, hostname, () => {
+    server.httpServer.listen(port, hostname, async () => {
         if (hostname) {
             log.info("server", `Listening on ${hostname}:${port}`);
         } else {
             log.info("server", `Listening on ${port}`);
         }
-        startMonitors();
+        await startMonitors();
+
+        // Put this here. Start background jobs after the db and server is ready to prevent clear up during db migration.
+        await initBackgroundJobs();
+
         checkVersion.startInterval();
     });
-
-    await initBackgroundJobs();
 
     // Start cloudflared at the end if configured
     await cloudflaredAutoStart(cloudflaredToken);
@@ -1679,13 +1688,13 @@ async function afterLogin(socket, user) {
 
     await StatusPage.sendStatusPageList(io, socket);
 
+    const monitorPromises = [];
     for (let monitorID in monitorList) {
-        await sendHeartbeatList(socket, monitorID);
+        monitorPromises.push(sendHeartbeatList(socket, monitorID));
+        monitorPromises.push(Monitor.sendStats(io, monitorID, user.id));
     }
 
-    for (let monitorID in monitorList) {
-        await Monitor.sendStats(io, monitorID, user.id);
-    }
+    await Promise.all(monitorPromises);
 
     // Set server timezone from client browser if not set
     // It should be run once only
@@ -1707,7 +1716,7 @@ async function initDatabase(testMode = false) {
     log.info("server", "Connected to the database");
 
     // Patch the database
-    await Database.patch();
+    await Database.patch(port, hostname);
 
     let jwtSecretBean = await R.findOne("setting", " `key` = ? ", [
         "jwtSecret",
@@ -1802,7 +1811,11 @@ async function startMonitors() {
     }
 
     for (let monitor of list) {
-        await monitor.start(io);
+        try {
+            await monitor.start(io);
+        } catch (e) {
+            log.error("monitor", e);
+        }
         // Give some delays, so all monitors won't make request at the same moment when just start the server.
         await sleep(getRandomInt(300, 1000));
     }
