@@ -344,6 +344,7 @@ export default {
             if (!!this.$refs.mermaidMap.innerHTML) {
                 await mermaid.run({ nodes: [ this.$refs.mermaidMap ] });
                 // todo.. add dom events.. https://mermaid.js.org/config/usage.html#binding-events
+                await new Promise((resolve) => setTimeout(() => resolve(), 0));
                 this.$refs.mermaidMap.removeAttribute('data-processed');
             } else {
                 console.error("Skipping mermaid because DOM is not done");
