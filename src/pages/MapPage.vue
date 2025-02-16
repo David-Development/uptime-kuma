@@ -316,8 +316,6 @@ export default {
                     statusClass = 'offline'
                 }
 
-                statusClass = 'offline'
-
                 /*
                 // users can give the monitor a shorter name in Mermaid - thus we need to create a mapping
                 const pattern = new RegExp(`(\\w+)\\(.*?${monitor.name}\\)`, "gm");
