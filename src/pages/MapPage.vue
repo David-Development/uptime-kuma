@@ -109,7 +109,8 @@ const favicon = new Favico({
     animation: "none"
 });
 
-const flowChartTemplateRaw = `FLOW_CHART_TEMPLATE_PLACEHOLDER
+const flowChartTemplateRaw = `
+FLOW_CHART_TEMPLATE_PLACEHOLDER
 `;
 
 export default {
