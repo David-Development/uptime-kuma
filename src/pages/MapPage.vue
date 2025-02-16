@@ -46,9 +46,8 @@
                     👀 {{ $t("statusPageNothing") }}
                 </div>
 
-                <!--<div id="mermaid-map">{{ $root.flowChartSVG }}</div>-->
-                <div id="mermaid-map" class="mermaid">
-                    {{ $root.flowChart }}
+                <div id="mermaid-map" class="mermaid" ref="mermaidMap">
+                    {{ flowChart }}
                 </div>
             </div>
 
@@ -147,7 +146,6 @@ export default {
             loading: true,
             flowChart: "",
             flowChartTemplate: flowChartTemplateRaw,
-            // flowChartSVG: null,
         };
     },
     computed: {
@@ -188,7 +186,14 @@ export default {
                 }
             }
 
-            this.updateChart();
+            void this.updateChart();
+        },
+
+        "flowChart"() {
+            this.$nextTick(async () => {
+                console.log("Flow chart updated - reload mermaid");
+                await this.updateMermaid();
+            });
         }
 
     },
@@ -304,8 +309,11 @@ export default {
         },
 
         updateChart() {
+            this.flowChart = this.createMermaidCode();
+        },
+
+        createMermaidCode() {
             let flowChart = this.flowChartTemplate;
-            // console.log(`START>${flowChart}<END`);
             for(const monitor of Object.values(this.$root.monitorList)) {
                 // console.log(monitor.id, monitor.name, this.$root.publicLastHeartbeatList[monitor.id]?.status);
 
@@ -328,21 +336,18 @@ export default {
 
                 flowChart = flowChart.replace(`${monitor.name})`, `${monitor.name}):::${statusClass}`)
             }
-            console.log(flowChart);
+            return flowChart
+        },
 
-            this.$root.flowChart = flowChart;
-            // console.log(this.$root.monitorList[1]);
-            nextTick(async () => {
-                setTimeout(async () => {
-                    console.log("update mermaid");
-                    await mermaid.run({ querySelector: '#mermaid-map' });
-
-                    // todo.. add dom events.. https://mermaid.js.org/config/usage.html#example-of-a-marked-renderer
-                    document.getElementById('mermaid-map').removeAttribute('data-processed');
-                    //const { svg } = await mermaid.render('mermaid-map', flowChart);
-                    //this.$root.flowChartSVG = svg;
-                }, 1000);
-            })
+        async updateMermaid() {
+            console.log("updateMermaid");
+            if (!!this.$refs.mermaidMap.innerHTML) {
+                await mermaid.run({ nodes: [ this.$refs.mermaidMap ] });
+                // todo.. add dom events.. https://mermaid.js.org/config/usage.html#binding-events
+                this.$refs.mermaidMap.removeAttribute('data-processed');
+            } else {
+                console.error("Skipping mermaid because DOM is not done");
+            }
         },
 
     
