@@ -328,7 +328,7 @@ export default {
                 }
                 */
 
-                flowChart = flowChart.replace(`(${monitor.name})`, `(${monitor.name}):::${statusClass}`)
+                flowChart = flowChart.replace(`${monitor.name})`, `${monitor.name}):::${statusClass}`)
             }
             // console.log(flowChart);
 
