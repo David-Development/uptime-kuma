@@ -341,7 +341,7 @@ export default {
 
         async updateMermaid() {
             console.log("updateMermaid");
-            if (!!this.$refs.mermaidMap.innerHTML) {
+            if (!!this.$refs.mermaidMap?.innerHTML) {
                 await mermaid.run({ nodes: [ this.$refs.mermaidMap ] });
                 // todo.. add dom events.. https://mermaid.js.org/config/usage.html#binding-events
                 await new Promise((resolve) => setTimeout(() => resolve(), 1000));
