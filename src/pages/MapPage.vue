@@ -317,9 +317,18 @@ export default {
                 }
 
                 statusClass = 'offline'
-                
+
+                /*
+                // users can give the monitor a shorter name in Mermaid - thus we need to create a mapping
+                const pattern = new RegExp(`(\\w+)\\(.*?${monitor.name}\\)`, "gm");
+                const mermaidGroup = pattern.exec(flowChart);
+                if (mermaidGroup) {
+                    const mermaidName = mermaidGroup[1];
+                    
+                }
+                */
+
                 flowChart = flowChart.replace(`(${monitor.name})`, `(${monitor.name}):::${statusClass}`)
-                flowChart = flowChart.replace(`/>${monitor.name})`, `(${monitor.name}):::${statusClass}`)
             }
             // console.log(flowChart);
 
